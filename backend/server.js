@@ -2,43 +2,37 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import OpenAI from "openai";
+import multer from "multer";
+import fs from "fs";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+const upload = multer({ dest: "uploads/" });
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-app.post("/corregir", async (req, res) => {
+app.post("/analizar-examen", upload.single("imagen"), async (req, res) => {
   try {
-    const { texto } = req.body;
+    const rutaImagen = req.file.path;
 
-    if (!texto) {
-      return res.status(400).json({ error: "No hay texto" });
-    }
-
+    // ⚠️ MOMENTO SIMPLIFICADO (luego metemos OCR real)
     const prompt = `
 Eres un profesor experto.
 
-Corrige el siguiente texto de un alumno.
+A partir de un examen suspenso, genera:
 
-Devuelve SIEMPRE en este formato:
+1. Lista de errores típicos del alumno
+2. Plan de mejora
+3. 5 ejercicios personalizados
 
-NOTA: (0-10)
+Devuelve en formato claro.
 
-ERRORES:
-- error 1
-- error 2
-
-FEEDBACK:
-Explicación clara y personalizada para el alumno.
-
-TEXTO:
-${texto}
+(Asume que el alumno ha fallado conceptos básicos)
 `;
 
     const response = await client.chat.completions.create({
@@ -46,12 +40,14 @@ ${texto}
       messages: [{ role: "user", content: prompt }],
     });
 
-    const resultado = response.choices[0].message.content;
+    fs.unlinkSync(rutaImagen); // borrar imagen
 
-    res.json({ resultado });
+    res.json({
+      resultado: response.choices[0].message.content,
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error al corregir" });
+    res.status(500).json({ error: "Error" });
   }
 });
 
