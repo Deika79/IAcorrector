@@ -21,7 +21,6 @@ function App() {
         { responseType: "blob" }
       );
 
-      // Descargar PDF automáticamente
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -29,7 +28,6 @@ function App() {
       document.body.appendChild(link);
       link.click();
     } catch (error) {
-      console.error(error);
       alert("Error al generar PDF");
     }
 
@@ -37,18 +35,30 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <h1>📸 Generador de Recuperación</h1>
+    <div className="app">
+      {/* Banner */}
+      <img src="/banner.png" alt="banner" className="banner" />
 
-      <input
-        type="file"
-        accept="image/*"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      <div className="card">
+        <h1>Generador de Plan de Recuperación</h1>
+        <p>
+          Sube un examen manuscrito y genera automáticamente ejercicios
+          personalizados para el alumno.
+        </p>
 
-      <button onClick={subirImagen} disabled={loading}>
-        {loading ? "Generando PDF..." : "Generar plan"}
-      </button>
+        <label className="file-input">
+          {file ? file.name : "Seleccionar imagen"}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setFile(e.target.files[0])}
+          />
+        </label>
+
+        <button onClick={subirImagen} disabled={loading}>
+          {loading ? "Generando..." : "Generar PDF"}
+        </button>
+      </div>
     </div>
   );
 }
