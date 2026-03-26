@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import OpenAI from "openai";
 import multer from "multer";
 import fs from "fs";
+import Tesseract from "tesseract.js";
 
 dotenv.config();
 
@@ -20,19 +21,32 @@ app.post("/analizar-examen", upload.single("imagen"), async (req, res) => {
   try {
     const rutaImagen = req.file.path;
 
-    // ⚠️ MOMENTO SIMPLIFICADO (luego metemos OCR real)
+    // 🧠 OCR: leer texto de la imagen
+    const {
+      data: { text },
+    } = await Tesseract.recognize(rutaImagen, "spa");
+
+    console.log("Texto detectado:", text);
+
+    // 🧠 IA analiza el texto REAL
     const prompt = `
 Eres un profesor experto.
 
-A partir de un examen suspenso, genera:
+Este es un examen REAL de un alumno que ha suspendido:
 
-1. Lista de errores típicos del alumno
-2. Plan de mejora
-3. 5 ejercicios personalizados
+"${text}"
 
-Devuelve en formato claro.
+Haz lo siguiente:
 
-(Asume que el alumno ha fallado conceptos básicos)
+1. Detecta errores del alumno
+2. Explica qué no entiende
+3. Genera un plan de recuperación
+4. Crea 5 ejercicios personalizados para mejorar
+
+IMPORTANTE:
+- Sé concreto
+- No inventes cosas que no estén en el texto
+- Usa lenguaje claro para el alumno
 `;
 
     const response = await client.chat.completions.create({
@@ -40,14 +54,15 @@ Devuelve en formato claro.
       messages: [{ role: "user", content: prompt }],
     });
 
-    fs.unlinkSync(rutaImagen); // borrar imagen
+    fs.unlinkSync(rutaImagen);
 
     res.json({
       resultado: response.choices[0].message.content,
+      textoDetectado: text,
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error" });
+    res.status(500).json({ error: "Error al analizar examen" });
   }
 });
 
