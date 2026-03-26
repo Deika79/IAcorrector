@@ -48,7 +48,7 @@ function App() {
       <h2>🧾 Texto detectado:</h2>
       <pre>{textoDetectado}</pre>
 
-      <h2>🧠 Resultado:</h2>
+      <h2>Resultado:</h2>
       <pre>{resultado}</pre>
     </div>
   );
