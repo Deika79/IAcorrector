@@ -16,7 +16,7 @@ function App() {
 
     try {
       const res = await axios.post(
-        "http://localhost:3001/analizar-examen",
+        "https://https://iacorrector.onrender.com/analizar-examen",
         formData,
         { responseType: "blob" }
       );
