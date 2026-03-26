@@ -16,7 +16,7 @@ function App() {
 
     try {
       const res = await axios.post(
-        "https://https://iacorrector.onrender.com/analizar-examen",
+        `${import.meta.env.VITE_API_URL}/analizar-examen`,
         formData,
         { responseType: "blob" }
       );
@@ -28,6 +28,7 @@ function App() {
       document.body.appendChild(link);
       link.click();
     } catch (error) {
+      console.error(error);
       alert("Error al generar PDF");
     }
 
@@ -40,7 +41,7 @@ function App() {
       <img src="/banner.png" alt="banner" className="banner" />
 
       <div className="card">
-        <h1></h1>
+        <h1>Generador de Recuperación</h1>
         <p>
           Sube un examen manuscrito y genera automáticamente ejercicios
           personalizados para el alumno.
