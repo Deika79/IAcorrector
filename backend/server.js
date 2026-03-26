@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import OpenAI from "openai";
 import multer from "multer";
 import fs from "fs";
-import Tesseract from "tesseract.js";
 
 dotenv.config();
 
@@ -21,44 +20,52 @@ app.post("/analizar-examen", upload.single("imagen"), async (req, res) => {
   try {
     const rutaImagen = req.file.path;
 
-    // 🧠 OCR: leer texto de la imagen
-    const {
-      data: { text },
-    } = await Tesseract.recognize(rutaImagen, "spa");
-
-    console.log("Texto detectado:", text);
-
-    // 🧠 IA analiza el texto REAL
-    const prompt = `
-Eres un profesor experto.
-
-Este es un examen REAL de un alumno que ha suspendido:
-
-"${text}"
-
-Haz lo siguiente:
-
-1. Detecta errores del alumno
-2. Explica qué no entiende
-3. Genera un plan de recuperación
-4. Crea 5 ejercicios personalizados para mejorar
-
-IMPORTANTE:
-- Sé concreto
-- No inventes cosas que no estén en el texto
-- Usa lenguaje claro para el alumno
-`;
+    // Convertir imagen a base64
+    const imageBuffer = fs.readFileSync(rutaImagen);
+    const base64Image = imageBuffer.toString("base64");
 
     const response = await client.chat.completions.create({
       model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `
+Eres un profesor experto de primaria.
+
+Estás viendo un examen REAL escrito a mano por un alumno.
+
+Haz lo siguiente:
+
+1. Interpreta lo que ha escrito (aunque esté mal escrito)
+2. Detecta errores de concepto
+3. Explica qué no entiende el alumno
+4. Genera un plan de recuperación claro
+5. Crea 5 ejercicios personalizados adaptados a su nivel
+
+IMPORTANTE:
+- No seas genérico
+- Adapta el lenguaje a un niño
+- Sé claro y útil para el profesor
+              `,
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
+            },
+          ],
+        },
+      ],
     });
 
     fs.unlinkSync(rutaImagen);
 
     res.json({
       resultado: response.choices[0].message.content,
-      textoDetectado: text,
     });
   } catch (error) {
     console.error(error);
