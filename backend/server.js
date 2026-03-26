@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import OpenAI from "openai";
 import multer from "multer";
 import fs from "fs";
+import PDFDocument from "pdfkit";
+import path from "path";
 
 dotenv.config();
 
@@ -20,7 +22,6 @@ app.post("/analizar-examen", upload.single("imagen"), async (req, res) => {
   try {
     const rutaImagen = req.file.path;
 
-    // Convertir imagen a base64
     const imageBuffer = fs.readFileSync(rutaImagen);
     const base64Image = imageBuffer.toString("base64");
 
@@ -35,20 +36,22 @@ app.post("/analizar-examen", upload.single("imagen"), async (req, res) => {
               text: `
 Eres un profesor experto de primaria.
 
-Estás viendo un examen REAL escrito a mano por un alumno.
+Analiza este examen manuscrito.
 
-Haz lo siguiente:
+Devuelve EXACTAMENTE en este formato:
 
-1. Interpreta lo que ha escrito (aunque esté mal escrito)
-2. Detecta errores de concepto
-3. Explica qué no entiende el alumno
-4. Genera un plan de recuperación claro
-5. Crea 5 ejercicios personalizados adaptados a su nivel
+ERRORES:
+...
 
-IMPORTANTE:
-- No seas genérico
-- Adapta el lenguaje a un niño
-- Sé claro y útil para el profesor
+PLAN:
+...
+
+EJERCICIOS:
+1.
+2.
+3.
+4.
+5.
               `,
             },
             {
@@ -62,14 +65,32 @@ IMPORTANTE:
       ],
     });
 
-    fs.unlinkSync(rutaImagen);
+    const contenido = response.choices[0].message.content;
 
-    res.json({
-      resultado: response.choices[0].message.content,
+    // 📄 Crear PDF
+    const doc = new PDFDocument();
+    const fileName = `reporte_${Date.now()}.pdf`;
+    const filePath = path.join("uploads", fileName);
+
+    const stream = fs.createWriteStream(filePath);
+    doc.pipe(stream);
+
+    doc.fontSize(20).text("📚 Plan de Recuperación", { align: "center" });
+    doc.moveDown();
+
+    doc.fontSize(12).text(contenido);
+
+    doc.end();
+
+    stream.on("finish", () => {
+      res.download(filePath, fileName, () => {
+        fs.unlinkSync(filePath);
+        fs.unlinkSync(rutaImagen);
+      });
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Error al analizar examen" });
+    res.status(500).json({ error: "Error al generar PDF" });
   }
 });
 
