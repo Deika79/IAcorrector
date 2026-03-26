@@ -4,8 +4,6 @@ import "./App.css";
 
 function App() {
   const [file, setFile] = useState(null);
-  const [resultado, setResultado] = useState("");
-  const [textoDetectado, setTextoDetectado] = useState("");
   const [loading, setLoading] = useState(false);
 
   const subirImagen = async () => {
@@ -19,13 +17,20 @@ function App() {
     try {
       const res = await axios.post(
         "http://localhost:3001/analizar-examen",
-        formData
+        formData,
+        { responseType: "blob" }
       );
 
-      setResultado(res.data.resultado);
-      setTextoDetectado(res.data.textoDetectado);
+      // Descargar PDF automáticamente
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "plan_recuperacion.pdf");
+      document.body.appendChild(link);
+      link.click();
     } catch (error) {
-      setResultado("Error al analizar");
+      console.error(error);
+      alert("Error al generar PDF");
     }
 
     setLoading(false);
@@ -33,7 +38,7 @@ function App() {
 
   return (
     <div className="container">
-      <h1>📸 Corrector Inteligente</h1>
+      <h1>📸 Generador de Recuperación</h1>
 
       <input
         type="file"
@@ -42,14 +47,8 @@ function App() {
       />
 
       <button onClick={subirImagen} disabled={loading}>
-        {loading ? "Analizando..." : "Analizar examen"}
+        {loading ? "Generando PDF..." : "Generar plan"}
       </button>
-
-      <h2>🧾 Texto detectado:</h2>
-      <pre>{textoDetectado}</pre>
-
-      <h2>Resultado:</h2>
-      <pre>{resultado}</pre>
     </div>
   );
 }
