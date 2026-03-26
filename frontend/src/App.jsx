@@ -5,6 +5,7 @@ import "./App.css";
 function App() {
   const [file, setFile] = useState(null);
   const [resultado, setResultado] = useState("");
+  const [textoDetectado, setTextoDetectado] = useState("");
   const [loading, setLoading] = useState(false);
 
   const subirImagen = async () => {
@@ -20,7 +21,9 @@ function App() {
         "http://localhost:3001/analizar-examen",
         formData
       );
+
       setResultado(res.data.resultado);
+      setTextoDetectado(res.data.textoDetectado);
     } catch (error) {
       setResultado("Error al analizar");
     }
@@ -42,6 +45,10 @@ function App() {
         {loading ? "Analizando..." : "Analizar examen"}
       </button>
 
+      <h2>🧾 Texto detectado:</h2>
+      <pre>{textoDetectado}</pre>
+
+      <h2>🧠 Resultado:</h2>
       <pre>{resultado}</pre>
     </div>
   );
