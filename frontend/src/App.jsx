@@ -40,7 +40,7 @@ function App() {
       <img src="/banner.png" alt="banner" className="banner" />
 
       <div className="card">
-        <h1>Generador de Plan de Recuperación</h1>
+        <h1></h1>
         <p>
           Sube un examen manuscrito y genera automáticamente ejercicios
           personalizados para el alumno.
